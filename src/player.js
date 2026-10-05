@@ -82,9 +82,12 @@ export class Player {
   updateMovement(dt, game) {
     const level = game.level;
     const dir = input.axis();
-    const canAct = this.stun <= 0;
+    const locked = game.playerLocked;
+    const canAct = this.stun <= 0 && !locked;
 
-    if (canAct) {
+    if (locked) {
+      this.vx = 0;
+    } else if (canAct) {
       this.vx = dir * SPEED;
       if (dir) this.facing = dir;
     } else {

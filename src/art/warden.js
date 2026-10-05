@@ -33,6 +33,9 @@ const POSES = {
   leap: { pitch: 0, crouch: 0, rear: 0, jaw: 0.45, eye: 1 },
   volley: { pitch: -0.3, crouch: 0, rear: 1, jaw: 0.75, eye: 1 },
   recover: { pitch: 0.08, crouch: 1.2, rear: 0, jaw: 0.1, eye: 0.35 },
+  introWake: { pitch: 0.04, crouch: 1.2, rear: 0, jaw: 0.15, eye: 0.5 },
+  introRoar: { pitch: -0.35, crouch: 0, rear: 1, jaw: 1, eye: 1 },
+  introSlam: { pitch: 0.1, crouch: 2.2, rear: 0, jaw: 0.3, eye: 1 },
 };
 const POSE_EASE = 14;
 
@@ -95,6 +98,7 @@ export class WardenRig extends Rig {
     this.tick(dt, boss.facing);
     this.recoil.update(dt);
     this.shake = Math.max(0, this.shake - dt * 5);
+    if (boss.introPlaying && boss.introPhase === 'roar') this.shake = 0.45;
 
     const target = POSES[this.poseName(boss)];
     for (const key of Object.keys(target)) this.pose[key] = damp(this.pose[key], target[key], POSE_EASE, dt);
@@ -111,6 +115,7 @@ export class WardenRig extends Rig {
   }
 
   poseName(boss) {
+    if (boss.introPlaying) return { wake: 'introWake', roar: 'introRoar', slam: 'introSlam' }[boss.introPhase];
     if (!boss.active) return 'dormant';
     if (boss.state === 'windup') return { charge: 'windupCharge', leap: 'windupLeap', volley: 'windupVolley' }[boss.lastAttack];
     return boss.state;
@@ -124,7 +129,7 @@ export class WardenRig extends Rig {
     const pawing = boss.state === 'windup' && boss.lastAttack === 'charge';
 
     // Breathing: slow asleep, quick and heavy while recovering.
-    const [rate, depth] = !boss.active ? [0.9, 0.4] : boss.state === 'recover' ? [7, 0.9] : [1.7, 0.5];
+    const [rate, depth] = !boss.awake ? [0.9, 0.4] : boss.state === 'recover' ? [7, 0.9] : [1.7, 0.5];
     const breath = Math.sin(this.time * rate) * depth;
     const jitter = Math.sin(this.time * 90) * this.shake * 1.2;
 
@@ -179,7 +184,7 @@ export class WardenRig extends Rig {
   drawBody(ctx, boss, tones, flashing) {
     // A hard-edged flash: it spends most of its time fully lit or fully dark, not in between.
     const pulse = clamp(0.5 + Math.sin(this.time * 30) * 3, 0, 1) * this.tell;
-    const resting = boss.active ? tones.shell : tones.dormant;
+    const resting = boss.awake ? tones.shell : tones.dormant;
     const shell = flashing ? tones.shell : mixTone(resting, tones.tell, pulse);
 
     // Wing cases.
@@ -200,7 +205,7 @@ export class WardenRig extends Rig {
     ctx.moveTo(-12.2, 8.0);
     ctx.quadraticCurveTo(-4, 6.4, 4.7, 6.6);
     strokeInk(ctx, LINE.detail * 1.4);
-    if (!flashing && boss.active) {
+    if (!flashing && boss.awake) {
       ctx.beginPath();
       ctx.moveTo(-10.6, -5.2);
       ctx.quadraticCurveTo(-6.6, -9.7, -1.2, -9.6);

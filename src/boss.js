@@ -8,6 +8,11 @@ const LEAP_VELOCITY = 300;
 const LEAP_AIR_TIME = (2 * LEAP_VELOCITY) / 900;
 const ATTACKS = ['charge', 'leap', 'volley'];
 const CHARGE_DUST_INTERVAL = 0.07;
+// Entrance: it stirs, rears up and roars, then slams back down. Times are in seconds.
+const INTRO_WAKE = 0.5;
+const INTRO_ROAR = 0.9;
+const INTRO_SLAM = 0.35;
+const INTRO_TIME = INTRO_WAKE + INTRO_ROAR + INTRO_SLAM;
 // Where volley shots leave from: between the pincers once it has reared up (matches the art).
 const MUZZLE = { x: 20, y: -5 };
 
@@ -18,15 +23,31 @@ export class Boss extends Enemy {
     super(tx, ty, { w: 28, h: 28, hp: 18, color: '#5b3a8c', shards: 18, dropMin: 15, dropMax: 15, dropValue: 2 });
     this.maxHp = this.hp;
     this.active = false;
-    this.setState('idle', 1);
+    this.setState('dormant', 0);
     this.lastAttack = null;
     this.dustIn = 0;
     this.rig = new WardenRig(this.facing);
   }
 
+  // Starts the entrance; the boss only becomes active (and hittable) once it is over.
   activate() {
-    this.active = true;
-    this.setState('idle', 1);
+    this.setState('intro', INTRO_TIME);
+    this.slammed = false;
+  }
+
+  get awake() {
+    return this.active || this.state === 'intro';
+  }
+
+  get introPlaying() {
+    return this.state === 'intro';
+  }
+
+  // wake -> roar -> slam, driven by how much of the intro has elapsed.
+  get introPhase() {
+    const elapsed = INTRO_TIME - this.timer;
+    if (elapsed < INTRO_WAKE) return 'wake';
+    return elapsed < INTRO_WAKE + INTRO_ROAR ? 'roar' : 'slam';
   }
 
   setState(state, time) {
@@ -52,6 +73,11 @@ export class Boss extends Enemy {
   }
 
   think(dt, game) {
+    if (this.introPlaying) {
+      this.vx = 0;
+      this.updateIntro(dt, game);
+      return;
+    }
     if (!this.active) {
       this.vx = 0;
       return;
@@ -109,6 +135,21 @@ export class Boss extends Enemy {
         this.vx = 0;
         if (this.timer <= 0) this.setState('idle', 0.7);
         break;
+    }
+  }
+
+  updateIntro(dt, game) {
+    this.timer -= dt;
+    this.facing = Math.sign(game.player.cx - this.cx) || this.facing;
+    if (this.introPhase === 'slam' && !this.slammed) {
+      this.slammed = true;
+      sfx.play('slam');
+      this.rig.slammed();
+      spawnDust(game, this.cx, this.y + this.h, 16, 170);
+    }
+    if (this.timer <= 0) {
+      this.active = true;
+      this.setState('idle', 0.7);
     }
   }
 
