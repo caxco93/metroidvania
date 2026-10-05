@@ -4,6 +4,7 @@ let ctx = null;
 let master = null;
 let noiseBuffer = null;
 let lastPickupAt = 0;
+const readyListeners = [];
 
 function ensureContext() {
   if (!ctx) {
@@ -17,12 +18,19 @@ function ensureContext() {
     noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    for (const listener of readyListeners) listener({ ctx, master });
   }
   if (ctx.state === 'suspended') ctx.resume();
   return ctx;
 }
 
 window.addEventListener('keydown', ensureContext);
+
+// Runs `listener` with { ctx, master } once the AudioContext exists (immediately if it already does).
+export function onAudioReady(listener) {
+  if (ctx) listener({ ctx, master });
+  else readyListeners.push(listener);
+}
 
 // A pitched blip that glides from `freq` to `to`.
 function tone({ freq, to = freq, dur = 0.1, type = 'square', vol = 0.25, delay = 0 }) {

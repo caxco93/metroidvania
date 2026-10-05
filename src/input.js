@@ -10,6 +10,7 @@ const BINDINGS = {
   cancel: ['Escape', 'KeyQ'],
   revive: ['Enter', 'KeyE'],
   map: ['KeyM'],
+  mute: ['KeyN'],
 };
 
 const heldKeys = new Set();

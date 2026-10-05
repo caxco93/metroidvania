@@ -27,6 +27,7 @@ Then open http://localhost:8000.
 | Attack | X or J. Hold Up to strike upward; hold Down in the air to strike downward |
 | Interact / buy / revive | E (Enter also works in menus) |
 | Map | M (once bought) |
+| Mute / unmute music | N |
 
 Push toward a ledge while falling beside it to pull yourself up. A downward strike bounces you
 off enemies and spikes.

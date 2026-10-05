@@ -1,9 +1,11 @@
 import { VIEW_W, VIEW_H } from './constants.js';
 import { Game } from './game.js';
 import { input } from './input.js';
+import { music } from './music.js';
 
 const canvas = document.getElementById('game');
 const game = new Game(canvas);
+music.start();
 
 // Size the backing store to the displayed size so nothing is upscaled.
 function resize() {
