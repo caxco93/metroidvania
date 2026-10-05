@@ -1,0 +1,4 @@
+# Deploy output: a copy of index.html and src/
+dist/
+.bunny/
+.DS_Store
