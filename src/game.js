@@ -219,11 +219,16 @@ export class Game {
   // The gate only shuts once the player is completely past it; closing it on a player
   // who is still standing in the doorway would crush them back out.
   updateBossTrigger() {
-    if (!this.boss || this.boss.active || !this.fullyInRoom(ARENA)) return;
+    if (!this.boss || this.boss.awake || !this.fullyInRoom(ARENA)) return;
     this.boss.activate();
     sfx.play('gate');
     this.level.fill(GATE.x0, GATE.y0, GATE.x1, GATE.y1, Tile.SOLID);
     this.toast('The Warden awakens!');
+  }
+
+  // The player is frozen while the boss makes its entrance.
+  get playerLocked() {
+    return !!this.boss && this.boss.introPlaying;
   }
 
   onBossDefeated() {
