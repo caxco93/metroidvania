@@ -8,6 +8,7 @@ import { Crawler, Spitter } from './enemies.js';
 import { Boss } from './boss.js';
 import { Pickup, spawnShards } from './fx.js';
 import { sfx } from './audio.js';
+import { music } from './music.js';
 import { Npc, ShopMenu } from './shop.js';
 import { drawHud, drawMap, drawDeathScreen } from './ui.js';
 import { INK, PALETTE } from './gfx.js';
@@ -117,6 +118,7 @@ export class Game {
       }
       return;
     }
+    if (input.pressed('mute')) music.toggleMute();
     if (input.pressed('map')) {
       if (this.hasMap) {
         sfx.play('menu');
